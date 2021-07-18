@@ -1,0 +1,112 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "webAppName":{
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 40,
+            "metadata":{
+                "description": "The name of the web app ({webAppName}-{env}-{random})"
+            }
+        },
+        "apiAppName":{
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 40,
+            "metadata":{
+                "description": "The name of the web app ({apiAppName}-{env}-{random})"
+            }
+        },
+        "environment": {
+            "type": "string",
+            "defaultvalue": "dev",
+            "allowedValues": [
+                "dev",
+                "prod"
+            ],
+            "metadata": {
+                "description": "The name of the environment. This is used to name generated resources."
+            }
+        },
+        "sku": {
+            "type": "string",
+            "defaultValue": "B1",
+            "allowedValues": [
+                "F1",
+                "B1",
+                "B2",
+                "B3"
+            ],
+            "metadata": {
+                "description": "Describes plan's pricing tier and instance size. Check details at https://azure.microsoft.com/en-us/pricing/details/app-service/linux/"
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        }
+    },
+    "variables": {
+        "appServicePlanPortalName": "[concat('app-service-plan-', parameters('environment'))]",
+        "webName": "[concat(parameters('webAppName'),'-',parameters('environment'), '-',uniqueString(resourceGroup().id))]",
+        "apiName": "[concat(parameters('apiAppName'),'-',parameters('environment'), '-',uniqueString(resourceGroup().id))]",
+        "alwaysOn": true,
+        "linuxFxVersion": "TOMCAT|9.0-java11"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2020-12-01",
+            "name": "[variables('appServicePlanPortalName')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "[parameters('sku')]"
+            },
+            "kind": "linux",
+            "properties": {
+                "reserved": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2020-12-01",
+            "name": "[variables('webName')]",
+            "location": "[parameters('location')]",
+
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanPortalName'))]"
+            ],
+            "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanPortalName'))]",
+                "siteConfig": {
+                    "linuxFxVersion": "[variables('linuxFxVersion')]",
+                    "alwaysOn": "[variables('alwaysOn')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2020-12-01",
+            "name": "[variables('apiName')]",
+            "location": "[parameters('location')]",
+
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanPortalName'))]"
+            ],
+            "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanPortalName'))]",
+                "siteConfig": {
+                    "linuxFxVersion": "[variables('linuxFxVersion')]",
+                    "alwaysOn": "[variables('alwaysOn')]"
+                }
+            }
+        }
+    ],
+    "outputs": {
+
+    }
+}
