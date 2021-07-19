@@ -34,9 +34,8 @@
             "defaultValue": "B1",
             "allowedValues": [
                 "F1",
-                "B1",
-                "B2",
-                "B3"
+                "D1",
+                "B1"
             ],
             "metadata": {
                 "description": "Describes plan's pricing tier and instance size. Check details at https://azure.microsoft.com/en-us/pricing/details/app-service/linux/"
