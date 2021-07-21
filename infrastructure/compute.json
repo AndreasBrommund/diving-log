@@ -4,7 +4,7 @@
     "parameters": {
         "webAppName":{
             "type": "string",
-            "minLength": 2,
+            "minLength": 3,
             "maxLength": 40,
             "metadata":{
                 "description": "The name of the web app ({webAppName}-{env}-{random})"
@@ -12,7 +12,7 @@
         },
         "apiAppName":{
             "type": "string",
-            "minLength": 2,
+            "minLength": 3,
             "maxLength": 40,
             "metadata":{
                 "description": "The name of the web app ({apiAppName}-{env}-{random})"
