@@ -7,7 +7,7 @@
             "minLength": 3,
             "maxLength": 7,
             "metadata": {
-                "description": "The name of the hot storge account ({hotStorageAccountName}{env}{random})"
+                "description": "The name of the hot storge account ({hotStorageAccountName}{env}{random})."
             }
         },
         "coolStorageAccountName": {
@@ -15,7 +15,7 @@
             "minLength": 3,
             "maxLength": 7,
             "metadata": {
-                "description": "The name of the cool storge account ({coolStorageAccountName}{env}{random})"
+                "description": "The name of the cool storge account ({coolStorageAccountName}{env}{random})."
             }
         },
         "hotBlobContainers": {
@@ -60,7 +60,7 @@
         "coolStorageAccountName": "[concat(parameters('coolStorageAccountName'),parameters('environment'),uniqueString(resourceGroup().id))]"
     },
     "resources": [
-      {
+        {
             "type": "Microsoft.Storage/storageAccounts",
             "apiVersion": "2021-02-01",
             "name": "[variables('hotStorageAccountName')]",
@@ -81,7 +81,7 @@
             "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
             "apiVersion": "2021-02-01",
             "name": "[concat(variables('hotStorageAccountName'), '/default/', parameters('hotBlobContainers')[copyIndex('hotContainerCopy')])]",
-            "properties":{ },
+            "properties": {},
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts', variables('hotStorageAccountName'))]"
             ],
@@ -111,7 +111,7 @@
             "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
             "apiVersion": "2021-02-01",
             "name": "[concat(variables('coolStorageAccountName'), '/default/', parameters('coolBlobContainers')[copyIndex('coolContainerCopy')])]",
-            "properties":{ },
+            "properties": {},
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts', variables('coolStorageAccountName'))]"
             ],

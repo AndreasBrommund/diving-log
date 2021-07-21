@@ -2,20 +2,26 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "webAppName":{
+        "webAppName": {
             "type": "string",
             "minLength": 3,
             "maxLength": 40,
-            "metadata":{
-                "description": "The name of the web app ({webAppName}-{env}-{random})"
+            "metadata": {
+                "description": "The name of the web app ({webAppName}-{env}-{random})."
             }
         },
-        "apiAppName":{
+        "apiAppName": {
             "type": "string",
             "minLength": 3,
             "maxLength": 40,
-            "metadata":{
-                "description": "The name of the web app ({apiAppName}-{env}-{random})"
+            "metadata": {
+                "description": "The name of the web app ({apiAppName}-{env}-{random})."
+            }
+        },
+        "workspaceName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the workspace."
             }
         },
         "environment": {
@@ -52,9 +58,28 @@
     "variables": {
         "appServicePlanPortalName": "[concat('app-service-plan-', parameters('environment'))]",
         "webName": "[concat(parameters('webAppName'),'-',parameters('environment'), '-',uniqueString(resourceGroup().id))]",
+        "webLinuxFxVersion": "NODE|14-lts",
         "apiName": "[concat(parameters('apiAppName'),'-',parameters('environment'), '-',uniqueString(resourceGroup().id))]",
+        "apiLinuxFxVersion": "TOMCAT|9.0-java11",
         "alwaysOn": true,
-        "linuxFxVersion": "TOMCAT|9.0-java11"
+
+        "appinsightsProfilerfeatureVersion": "1.0.0",
+        "diagnosticServicesExtensionVersion": "~3",
+        "applicationinsIghtsAgentExtensionVersion": "~3",
+        "XDTMicrosoftApplicationInsightsMode": "recommended",
+        "XDTMicrosoftApplicationInsightsPreemptSdk": "disabled",
+        "XDTMicrosoftApplicationInsightsBaseExtensions": "disabled",
+        "instrumentationEngineExtensionVersion": "disabled",
+        "snapshotDebuggerExtensionVersion": "disabled",
+        "appinsightsSnapshotfeatureVersion": "1.0.0",
+        "applicationinsightsConfigurationContent": "",
+
+        "webInsightName": "[concat(parameters('webAppName'),'-',parameters('environment'), '-',uniqueString(resourceGroup().id))]",
+        "webInsightKind": "web",
+        "apiInsightName": "[concat(parameters('apiAppName'),'-',parameters('environment'), '-',uniqueString(resourceGroup().id))]",
+        "apiInsightKind": "java",
+        "applicationType": "web",
+        "ingestionMode": "IngestionMode"
     },
     "resources": [
         {
@@ -82,26 +107,100 @@
             "properties": {
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanPortalName'))]",
                 "siteConfig": {
-                    "linuxFxVersion": "[variables('linuxFxVersion')]",
+                    "linuxFxVersion": "[variables('webLinuxFxVersion')]",
                     "alwaysOn": "[variables('alwaysOn')]"
                 }
-            }
+            },
+            "resources": [
+                {
+                    "type": "config",
+                    "apiVersion": "2020-12-01",
+                    "name": "appsettings",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites/', variables('webName'))]",
+                        "[resourceId('microsoft.insights/components/', variables('webInsightName'))]"
+                    ],
+                    "properties": {
+                        "ApplicationInsightsAgent_EXTENSION_VERSION": "[variables('applicationinsIghtsAgentExtensionVersion')]",
+                        "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(concat('microsoft.insights/components/', variables('webInsightName'))).InstrumentationKey]",
+                        "APPLICATIONINSIGHTS_CONNECTION_STRING": "[reference(concat('microsoft.insights/components/', variables('webInsightName'))).ConnectionString]",
+                        "APPINSIGHTS_PROFILERFEATURE_VERSION": "[variables('appinsightsProfilerfeatureVersion')]",
+                        "DiagnosticServices_EXTENSION_VERSION": "[variables('diagnosticServicesExtensionVersion')]",
+                        "InstrumentationEngine_EXTENSION_VERSION": "[variables('instrumentationEngineExtensionVersion')]",
+                        "XDT_MicrosoftApplicationInsights_Mode": "[variables('XDTMicrosoftApplicationInsightsMode')]",
+                        "XDT_MicrosoftApplicationInsights_PreemptSdk": "[variables('XDTMicrosoftApplicationInsightsPreemptSdk')]",
+                        "XDT_MicrosoftApplicationInsights_BaseExtensions": "[variables('XDTMicrosoftApplicationInsightsBaseExtensions')]",
+                        "SnapshotDebugger_EXTENSION_VERSION": "[variables('snapshotDebuggerExtensionVersion')]",
+                        "APPINSIGHTS_SNAPSHOTFEATURE_VERSION": "[variables('appinsightsSnapshotfeatureVersion')]",
+                        "APPLICATIONINSIGHTS_CONFIGURATION_CONTENT": "[variables('applicationinsightsConfigurationContent')]"
+                    }
+
+                }
+            ]
         },
         {
             "type": "Microsoft.Web/sites",
             "apiVersion": "2020-12-01",
             "name": "[variables('apiName')]",
             "location": "[parameters('location')]",
-
             "dependsOn": [
                 "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanPortalName'))]"
             ],
             "properties": {
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanPortalName'))]",
                 "siteConfig": {
-                    "linuxFxVersion": "[variables('linuxFxVersion')]",
+                    "linuxFxVersion": "[variables('apiLinuxFxVersion')]",
                     "alwaysOn": "[variables('alwaysOn')]"
                 }
+            },
+            "resources": [
+                {
+                    "type": "config",
+                    "apiVersion": "2020-12-01",
+                    "name": "appsettings",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites/', variables('apiName'))]",
+                        "[resourceId('microsoft.insights/components/', variables('apiInsightName'))]"
+                    ],
+                    "properties": {
+                        "ApplicationInsightsAgent_EXTENSION_VERSION": "[variables('applicationinsIghtsAgentExtensionVersion')]",
+                        "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(concat('microsoft.insights/components/', variables('apiInsightName'))).InstrumentationKey]",
+                        "APPLICATIONINSIGHTS_CONNECTION_STRING": "[reference(concat('microsoft.insights/components/', variables('apiInsightName'))).ConnectionString]",
+                        "APPINSIGHTS_PROFILERFEATURE_VERSION": "[variables('appinsightsProfilerfeatureVersion')]",
+                        "DiagnosticServices_EXTENSION_VERSION": "[variables('diagnosticServicesExtensionVersion')]",
+                        "InstrumentationEngine_EXTENSION_VERSION": "[variables('instrumentationEngineExtensionVersion')]",
+                        "XDT_MicrosoftApplicationInsights_Mode": "[variables('XDTMicrosoftApplicationInsightsMode')]",
+                        "XDT_MicrosoftApplicationInsights_PreemptSdk": "[variables('XDTMicrosoftApplicationInsightsPreemptSdk')]",
+                        "XDT_MicrosoftApplicationInsights_BaseExtensions": "[variables('XDTMicrosoftApplicationInsightsBaseExtensions')]",
+                        "SnapshotDebugger_EXTENSION_VERSION": "[variables('snapshotDebuggerExtensionVersion')]",
+                        "APPINSIGHTS_SNAPSHOTFEATURE_VERSION": "[variables('appinsightsSnapshotfeatureVersion')]",
+                        "APPLICATIONINSIGHTS_CONFIGURATION_CONTENT": "[variables('applicationinsightsConfigurationContent')]"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "microsoft.insights/components",
+            "apiVersion": "2020-02-02-preview",
+            "name": "[variables('webInsightName')]",
+            "location": "[parameters('location')]",
+            "kind": "[variables('webInsightKind')]",
+            "properties": {
+                "Application_Type": "[variables('applicationType')]",
+                "WorkspaceResourceId": "[resourceId('microsoft.operationalinsights/workspaces', parameters('workspaceName'))]",
+                "IngestionMode": "[variables('ingestionMode')]"
+            }
+        },
+        {
+            "type": "microsoft.insights/components",
+            "apiVersion": "2020-02-02-preview",
+            "name": "[variables('apiInsightName')]",
+            "location": "[parameters('location')]",
+            "kind": "[variables('apiInsightKind')]",
+            "properties": {
+                "Application_Type": "[variables('applicationType')]",
+                "WorkspaceResourceId": "[resourceId('microsoft.operationalinsights/workspaces', parameters('workspaceName'))]",
+                "IngestionMode": "[variables('ingestionMode')]"
             }
         }
     ],
