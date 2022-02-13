@@ -1,9 +1,12 @@
 param location string = resourceGroup().location
 
 param divingLogName string = 'divinglog'
+
 var owner = 'anderas'
 var logRetentionInDays = 30
 var serverFarmSku = 'B1'
+
+var dockerRegistryStartupCommand = ''
 
 resource divingLogStorage 'Microsoft.Storage/storageAccounts@2021-06-01' = {
   name: '${divingLogName}${uniqueString(resourceGroup().id)}'
@@ -78,9 +81,13 @@ resource api 'Microsoft.Web/sites@2021-02-01' = {
   properties: {
     serverFarmId: serverFarm.id
     siteConfig: {
-      linuxFxVersion: 'TOMCAT|9.0-java11'
+      linuxFxVersion: 'DOCKER|mcr.microsoft.com/appsvc/staticsite:latest'
+      appCommandLine: dockerRegistryStartupCommand
       alwaysOn: true
     }
+  }
+  identity: {
+    type: 'SystemAssigned'
   }
   tags: {
     owner: owner
@@ -91,18 +98,24 @@ resource apiConfig 'Microsoft.Web/sites/config@2021-02-01' = {
   name: 'appsettings'
   parent: api
   properties: {
-    ApplicationInsightsAgent_EXTENSION_VERSION: '~3'
     APPINSIGHTS_INSTRUMENTATIONKEY: insight.properties.InstrumentationKey
     APPLICATIONINSIGHTS_CONNECTION_STRING: insight.properties.ConnectionString
     APPINSIGHTS_PROFILERFEATURE_VERSION: '1.0.0'
+    APPINSIGHTS_SNAPSHOTFEATURE_VERSION: '1.0.0'
+    ApplicationInsightsAgent_EXTENSION_VERSION: '~3'
     DiagnosticServices_EXTENSION_VERSION: '~3'
     InstrumentationEngine_EXTENSION_VERSION: 'disabled'
+    SnapshotDebugger_EXTENSION_VERSION: 'disabled'
+    XDT_MicrosoftApplicationInsights_BaseExtensions: 'disabled'
     XDT_MicrosoftApplicationInsights_Mode: 'recommended'
     XDT_MicrosoftApplicationInsights_PreemptSdk: 'disabled'
-    XDT_MicrosoftApplicationInsights_BaseExtensions: 'disabled'
-    SnapshotDebugger_EXTENSION_VERSION: 'disabled'
-    APPINSIGHTS_SNAPSHOTFEATURE_VERSION: '1.0.0'
+
+    DOCKER_REGISTRY_SERVER_URL: 'https://mcr.microsoft.com'
+    DOCKER_REGISTRY_SERVER_USERNAME: ''
+    DOCKER_REGISTRY_SERVER_PASSWORD: ''
     APPLICATIONINSIGHTS_CONFIGURATION_CONTENT: ''
+
+    WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
   }
 }
 
