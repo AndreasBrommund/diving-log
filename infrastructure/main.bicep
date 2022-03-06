@@ -119,4 +119,41 @@ resource apiConfig 'Microsoft.Web/sites/config@2021-02-01' = {
   }
 }
 
+resource acr 'Microsoft.ContainerRegistry/registries@2021-09-01' = {
+  name: '${divingLogName}${uniqueString(resourceGroup().id)}'
+  location: location
+  sku: {
+    name: 'Basic'
+  }
+  properties: {
+    adminUserEnabled: false
+  }
+  tags: {
+    owner: owner
+  }
+}
+
+resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2021-10-15' = {
+  name: '${divingLogName}-cosmos'
+  kind: 'GlobalDocumentDB' 
+  location: location
+  properties: {
+    isVirtualNetworkFilterEnabled: false
+    capabilities: [
+      {
+          name: 'EnableServerless'
+      }
+    ]
+    databaseAccountOfferType: 'Standard'
+    locations: [
+      {
+        failoverPriority: 0
+        locationName: 'North Europe'
+      }
+    ]
+  }
+  tags: {
+    owner: owner
+  }
+}
 
