@@ -80,6 +80,9 @@ resource api 'Microsoft.Web/sites@2021-02-01' = {
   properties: {
     serverFarmId: serverFarm.id
     siteConfig: {
+      javaVersion: '17'
+      javaContainer: 'JAVA'
+      javaContainerVersion: 'SE'
       alwaysOn: true
     }
   }
@@ -95,9 +98,6 @@ resource apiConfig 'Microsoft.Web/sites/config@2021-02-01' = {
   name: 'appsettings'
   parent: api
   properties: {
-    javaVersion: '17'
-    javaContainer: 'JAVA'
-    javaContainerVersion: 'SE'
     APPINSIGHTS_INSTRUMENTATIONKEY: insight.properties.InstrumentationKey
     APPLICATIONINSIGHTS_CONNECTION_STRING: insight.properties.ConnectionString
     ApplicationInsightsAgent_EXTENSION_VERSION: '~2'
